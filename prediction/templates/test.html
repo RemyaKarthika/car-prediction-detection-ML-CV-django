@@ -1,0 +1,21 @@
+
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Detect Number Plate</title>
+</head>
+<body>
+    <h2>Number Plate Detection</h2>
+    
+    <form method="post" enctype="multipart/form-data">
+        {% csrf_token %}
+        
+        <label for="image">Upload an image:</label>
+        <input type="file" name="car_image" id="image" accept="image/*" required>
+        
+        <br>
+        
+        <input type="submit" value="Detect Number Plate">
+    </form>
+</body>
+</html>

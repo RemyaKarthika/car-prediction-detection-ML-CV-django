@@ -15,6 +15,7 @@ import pytesseract as pt
 from .models import ReviewAnalysis,CarDetails,CarModel,CarCompany
 from django.http import JsonResponse
 import google.generativeai as genai
+from predict_modified import DetectionPredictor, check_imgsz
 
 import os
 from dotenv import load_dotenv
@@ -72,7 +73,7 @@ def predict_price(request):
         X_predict[body_index] = 1
         X_predict[transmission_index] = 1
 
-        predicted_price = int(car_model.predict([X_predict]))
+        predicted_price = int(car_model.predict([X_predict])//3.34)
 
         context = {"predicted_price": predicted_price}
 
@@ -199,3 +200,67 @@ def get_model(request):
     models = CarModel.objects.filter(car_company__name=selected_company).values_list('name', flat=True)
     print(models,"ggggggggggggggg")
     return JsonResponse({'models': list(models)})
+
+
+
+# def test(request):
+#     if request.method == 'POST':
+#         image = request.POST.get('car_image')
+        
+#         media_root = settings.MEDIA_ROOT
+#         destination = os.path.join(media_root, "uploaded_images", image.name)
+
+#         fs = FileSystemStorage(location=media_root)
+#         fs.save(destination, image)
+#         uploaded_file_url = fs.url(destination)
+
+                
+#         cfg = {
+#             'model': 'car-prediction-ANPL-ML-CV-django/ultralytics/runs/detect/train_model/weights/best.pt',
+#             'imgsz': check_imgsz(640, min_dim=2),
+#             'source': destination,
+#             # Add other necessary configuration parameters here
+#         }        
+
+#         predictor = DetectionPredictor(cfg)
+#         predictor()
+        
+#         results = predictor.all_outputs
+        
+#         print(results)
+        
+#         return render(request, 'test.html', {'results': results})
+#     return render(request, 'test.html')
+
+
+
+def test(request):
+    if request.method == 'POST':
+        # Use request.FILES to access the uploaded file
+        image = request.FILES.get('car_image')
+
+        # Save the uploaded image to the media folder
+        media_root = settings.MEDIA_ROOT
+        destination = os.path.join(media_root, "uploaded_images", image.name)
+
+        fs = FileSystemStorage(location=media_root)
+        fs.save(destination, image)
+        uploaded_file_url = fs.url(destination)
+
+        # Continue with YOLO predictions
+        cfg = {
+            'model': 'car-prediction-ANPL-ML-CV-django/ultralytics/runs/detect/train_model/weights/best.pt',
+            'imgsz': check_imgsz(640, min_dim=2),
+            'source': destination,
+        }
+
+        
+        predictor(cfg)
+
+        results = predictor.all_outputs
+
+        print(results)
+
+        return render(request, 'test.html', {'results': results, 'uploaded_file_url': uploaded_file_url})
+
+    return render(request, 'test.html')
